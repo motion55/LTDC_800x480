@@ -31,6 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usart.h"
+#include "ov7670/ov7670.h"
 
 /* USER CODE END Includes */
 
@@ -80,6 +82,12 @@ void Error_Handler(void);
 #define LED2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+#define	CAMERA_RESET_GPIO_Port	DISP_GPIO_Port
+#define	CAMERA_RESET_Pin		DISP_Pin
+
+#define	debug_huart	huart1
+#define	debug_data	uart1_data
 
 /* USER CODE END Private defines */
 

@@ -19,6 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "crc.h"
+#include "dcmi.h"
+#include "dma.h"
 #include "dma2d.h"
 #include "i2c.h"
 #include "ltdc.h"
@@ -34,6 +36,7 @@
 #include "BSP_RGB_LCD.h"
 #include "GUI_Paint.h"
 #include "image.h"
+#include "debug_console.h"
 
 /* USER CODE END Includes */
 
@@ -103,6 +106,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_FMC_Init();
   MX_USART1_UART_Init();
   MX_LTDC_Init();
@@ -110,6 +114,8 @@ int main(void)
   MX_TIM2_Init();
   MX_CRC_Init();
   MX_I2C4_Init();
+  MX_DCMI_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 	printf("******** LTDC Example ********\r\n");
 	HAL_GPIO_WritePin(DISP_GPIO_Port, DISP_Pin, GPIO_PIN_SET);
@@ -136,16 +142,28 @@ int main(void)
 	Paint_DrawImage(gImage_800X221, 0, 0, 800, 221);
 	HAL_Delay(1000);
 
+	ov7670_init(&hdcmi, &hdma_dcmi, &hi2c_dcmi);
+	ov7670_config(0);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	DebugInit();
+
 	while (1)
 	{
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 #if 1
+		DebugTask();
+		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+		HAL_Delay(100);
+		DebugTask();
+		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+		HAL_Delay(100);
+#else
 		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
 		HAL_Delay(1000);
 		BSP_LCD_Clear(0xf000);
@@ -199,7 +217,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 400;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 19;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
@@ -226,6 +244,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_PLL1QCLK, RCC_MCODIV_2);
 }
 
 /* USER CODE BEGIN 4 */
