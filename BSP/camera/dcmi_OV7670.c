@@ -56,7 +56,7 @@ uint8_t DCMI_OV7670_Init(void)
 	//HAL_Delay(0xfff);
 	if(DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET)!=0)
 		return 0xff;
-	HAL_Delay(0xfff);
+	HAL_Delay(0xff);
   
 	for(i=0;i<CHANGE_REG_NUM;i++)
 	{
@@ -66,7 +66,7 @@ uint8_t DCMI_OV7670_Init(void)
 		}
 	}
 	//OV7670_config_window(272,16,320,240);// set 240*320
-	HAL_Delay(0xfff);
+	HAL_Delay(0xff);
 	return 0;//Init ok
 }
 
