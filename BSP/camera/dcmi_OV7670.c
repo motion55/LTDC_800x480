@@ -53,7 +53,7 @@ uint8_t DCMI_OV7670_Init(void)
 	//MCO1_Init();
 	//DCMI_0V7670_RST_PWDN_Init();
 			
-  	//Delay_ms(0xfff);
+	//HAL_Delay(0xfff);
 	if(DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET)!=0)
 		return 0xff;
 	HAL_Delay(0xfff);
