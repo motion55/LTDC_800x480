@@ -33,6 +33,7 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "usart.h"
 #include "ov7670/ov7670.h"
+#include "debug_console.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +56,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void DebugMain(uint32_t val);
 
 /* USER CODE END EFP */
 
@@ -69,6 +71,8 @@ void Error_Handler(void);
 #define TP_SDA_GPIO_Port GPIOF
 #define LED3_Pin GPIO_PIN_4
 #define LED3_GPIO_Port GPIOH
+#define DCMI_PWDN_Pin GPIO_PIN_5
+#define DCMI_PWDN_GPIO_Port GPIOA
 #define TP_SCLD12_Pin GPIO_PIN_12
 #define TP_SCLD12_GPIO_Port GPIOD
 #define TP_SDAD13_Pin GPIO_PIN_13

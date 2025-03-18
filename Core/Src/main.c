@@ -37,6 +37,7 @@
 #include "GUI_Paint.h"
 #include "image.h"
 #include "debug_console.h"
+#include "camera/dcmi_OV7670.h"
 
 /* USER CODE END Includes */
 
@@ -142,9 +143,6 @@ int main(void)
 	Paint_DrawImage(gImage_800X221, 0, 0, 800, 221);
 	HAL_Delay(1000);
 
-	ov7670_init(&hdcmi, &hdma_dcmi, &hi2c_dcmi);
-	ov7670_config(0);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -217,7 +215,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 400;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 19;
+  RCC_OscInitStruct.PLL.PLLQ = 20;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
@@ -249,6 +247,65 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+HAL_StatusTypeDef ov7670_write(uint8_t regAddr, uint8_t data);
+
+void DebugMain(uint32_t val)
+{
+	switch (val) {
+	case 0:
+	{
+		DebugPrint("\r\n ov7670_init(&hdcmi, &hdma_dcmi, &hi2c_dcmi);");
+		ov7670_init(&hdcmi, &hdma_dcmi, &hi2c_dcmi);
+		ov7670_config(0);
+	}
+		break;
+	case 1:
+	{
+		OV7670_IDTypeDef OV7670ID = {0};
+		if (!DCMI_OV7670_ReadID(&OV7670ID))
+		{
+			DebugPrint("\r\n ReadID %02X, %02X);", OV7670ID.PID, OV7670ID.Version);
+		}
+		else
+		{
+			DebugPrint("\r\n ReadID Error!");
+		}
+	}
+		break;
+	case 2:
+	{
+#ifdef	CAMERA_SCL_Pin
+		DebugPrint("\r\n HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_RESET);");
+		HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_RESET);
+#else
+		HAL_StatusTypeDef ret = ov7670_write(0x12, 0x80);  // RESET
+		DebugPrint("\r\n ov7670_write(0x12, 0x80) = %08lX", ret);
+#endif
+	}
+		break;
+	case 3:
+	{
+#ifdef	CAMERA_SCL_Pin
+		DebugPrint("\r\n HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_RESET);");
+		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_RESET);
+#else
+		uint8_t ret = DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET);
+		DebugPrint("\r\n DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET) = %02X", ret);
+#endif
+	}
+		break;
+	case 4:
+	{
+#if	(defined(CAMERA_SCL_Pin)&&defined(CAMERA_SDA_Pin))
+		DebugPrint("\r\n HAL_GPIO_WritePin(CAMERA_GPIO_Port, CAMERA_Pin, GPIO_PIN_SET);");
+		HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_SET);
+#endif
+	}
+		break;
+	}
+}
+
 
 /* USER CODE END 4 */
 
