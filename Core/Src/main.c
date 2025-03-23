@@ -38,6 +38,7 @@
 #include "image.h"
 #include "debug_console.h"
 #include "camera/dcmi_OV7670.h"
+#include "ov7670/ov7670.h"
 
 /* USER CODE END Includes */
 
@@ -252,13 +253,33 @@ void DebugMain(uint32_t val)
 	switch (val) {
 	case 0:
 	{
+#if	1
+		DebugPrint("\r\n OV7670_Init(&hdcmi, &hi2c_dcmi, 0, 0);");
+		OV7670_Init(&hdcmi, &hi2c_dcmi, 0, 0);
+		OV7670_Start();
+#else
 		DebugPrint("\r\n ov7670_init(&hdcmi, &hdma_dcmi, &hi2c_dcmi);");
 		ov7670_init(&hdcmi, &hdma_dcmi, &hi2c_dcmi);
-		ov7670_config(0);
+		ov7670_config(OV7670_MODE_QVGA_RGB565);
+		uint32_t p_lcdData = 0xD0000000;
+		ov7670_startCap(OV7670_CAP_CONTINUOUS, p_lcdData);
+#endif
 	}
 		break;
 	case 1:
 	{
+#if 1
+		uint8_t temp1, temp2;
+		if (ov7670_read(OV7670_PID, &temp1)==HAL_OK)
+		{
+			ov7670_read(OV7670_VER, &temp2);
+			DebugPrint("\r\n ReadID %02X %02X", temp1, temp2);
+		}
+		else
+		{
+			DebugPrint("\r\n ReadID Error!");
+		}
+#else
 		OV7670_IDTypeDef OV7670ID = {0};
 		if (!DCMI_OV7670_ReadID(&OV7670ID))
 		{
@@ -270,6 +291,7 @@ void DebugMain(uint32_t val)
 		{
 			DebugPrint("\r\n ReadID Error!");
 		}
+#endif
 	}
 		break;
 	case 2:
@@ -278,8 +300,13 @@ void DebugMain(uint32_t val)
 		DebugPrint("\r\n HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_RESET);");
 		HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_RESET);
 #else
-		HAL_StatusTypeDef ret = ov7670_write(0x12, 0x80);  // RESET
-		DebugPrint("\r\n ov7670_write(0x12, 0x80) = %08lX", ret);
+		//HAL_StatusTypeDef ret = ov7670_write(0x12, 0x80);  // RESET
+		//DebugPrint("\r\n ov7670_write(0x12, 0x80) = %08lX", ret);
+		if (OV7670_isDriverBusy()) {
+			DebugPrint("\r\n OV7670_isDriver is Busy");
+		} else {
+			DebugPrint("\r\n OV7670_isDriver is NOY Busy");
+		}
 #endif
 	}
 		break;
@@ -289,8 +316,8 @@ void DebugMain(uint32_t val)
 		DebugPrint("\r\n HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_RESET);");
 		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_RESET);
 #else
-		uint8_t ret = DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET);
-		DebugPrint("\r\n DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET) = %02X", ret);
+		//uint8_t ret = DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET);
+		//DebugPrint("\r\n DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET) = %02X", ret);
 #endif
 	}
 		break;
@@ -301,8 +328,8 @@ void DebugMain(uint32_t val)
 		HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_SET);
 #else
-		uint8_t ret = DCMI_OV7670_Init();
-		DebugPrint("\r\n DCMI_OV7670_Init() = %02X", ret);
+		//uint8_t ret = DCMI_OV7670_Init();
+		//DebugPrint("\r\n DCMI_OV7670_Init() = %02X", ret);
 #endif
 	}
 		break;

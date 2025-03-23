@@ -32,8 +32,8 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usart.h"
-#include "ov7670/ov7670.h"
 #include "debug_console.h"
+#include "ov7670/ov7670.h"
 
 /* USER CODE END Includes */
 

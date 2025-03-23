@@ -217,4 +217,17 @@ SECTIONS
     *(.gnu.linkonce.r.*)
     . = ALIGN(0x4);
    } >SDRAM
+
+  .CAM_Buffer_section :
+  {
+    . = ALIGN(32);
+    *(.CAMBufferSection) 
+  } >RAM_D2
+  
+  .DMA_Buffer_section :
+  {
+    . = ALIGN(32);
+    *(.DMABufferSection) 
+  } >RAM_D3
+  
 }
