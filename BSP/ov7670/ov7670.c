@@ -33,7 +33,7 @@
 #define OV7670_FRAME_SIZE_BYTES       (OV7670_WIDTH * OV7670_HEIGHT * OV7670_RGB565_BYTES)
 #define OV7670_FRAME_SIZE_WORDS       (OV7670_FRAME_SIZE_BYTES / 4U)
 
-#define DISPLAY_BUFFER_ADDR			  (0xD0000000)
+//#define DISPLAY_BUFFER_ADDR			  (0xD0000000)
 #define DISPLAY_WIDTH_SIZE_BYTES      (DISPLAY_WIDTH * OV7670_RGB565_BYTES)
 #define DISPLAY_WIDTH_SIZE_WORDS      (DISPLAY_WIDTH_SIZE_BYTES / 4U)
 #define DISPLAY_HEIGHT_SIZE_BYTES     (DISPLAY_HEIGHT * OV7670_RGB565_BYTES)
@@ -400,7 +400,7 @@ static struct
 
 /* Image buffer */
 #ifndef	DISPLAY_BUFFER_ADDR
-static uint8_t img_buffer[OV7670_BUFFER_SIZE];
+static uint8_t img_buffer[OV7670_BUFFER_SIZE] __attribute__((section(".DMA_Buffer_section")));
 #endif
 
 uint32_t line_counter;

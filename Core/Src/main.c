@@ -317,7 +317,11 @@ void DebugMain(uint32_t val)
 		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_RESET);
 #else
 		//uint8_t ret = DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET);
-		//DebugPrint("\r\n DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET) = %02X", ret);
+		DebugPrint("\r\n Clearing camera buffer");
+		uint16_t *buffer = (uint16_t *)0x38000200;
+		for (int i = 0; i<640; i++)	{
+			buffer[i] = 0xFFFF;
+		}
 #endif
 	}
 		break;
