@@ -151,7 +151,7 @@ unsigned int do_dump(void)
 void debug_parse(char *cmd_line)
 {
 	int params;
-	uint32_t temp1,temp2,temp3,temp4;
+	static uint32_t temp1=0,temp2=0,temp3=0,temp4=0;
 	uint16_t tempword;
 	uint8_t tempbyte;
 	char *next_line;
@@ -521,6 +521,9 @@ void debug_parse(char *cmd_line)
 		}
 		else
 		{
+			_debug_dump_beg = _old_debug_dump_beg;
+			_debug_dump_end = _debug_dump_beg + 127;
+			do_dump();
 		}
 		break;
 	default:

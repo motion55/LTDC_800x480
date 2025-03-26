@@ -41,8 +41,8 @@
 
 #if (OV7670_STREAM_MODE == OV7670_STREAM_MODE_BY_LINE)
 /* For double stream-line buffer */
-#define DISPLAY_BUFFER_SIZE           (DISPLAY_WIDTH_SIZE_BYTES * OV7670_RGB565_BYTES * OV7670_LINES_IN_CHUNK)
-#define OV7670_BUFFER_SIZE            (OV7670_WIDTH_SIZE_BYTES * OV7670_RGB565_BYTES * OV7670_LINES_IN_CHUNK)
+//#define DISPLAY_BUFFER_SIZE           (DISPLAY_WIDTH_SIZE_BYTES * OV7670_RGB565_BYTES * OV7670_LINES_IN_CHUNK)
+#define OV7670_BUFFER_SIZE_BYTES            (OV7670_WIDTH_SIZE_BYTES * OV7670_HEIGHT * OV7670_LINES_IN_CHUNK)
 #define OV7670_DMA_DATA_LEN           (OV7670_WIDTH_SIZE_WORDS * OV7670_LINES_IN_CHUNK)
 
 #ifdef	DISPLAY_BUFFER_ADDR
@@ -52,7 +52,7 @@
 #else
 /* Macro for update address to second half of double-line buffer */
 #define OV7670_SWITCH_BUFFER()        ((OV7670.buffer_addr==(uint32_t)img_buffer) ? \
-        (OV7670.buffer_addr + (OV7670_BUFFER_SIZE)/2U) : ((uint32_t)buffer))
+        (OV7670.buffer_addr + (OV7670_BUFFER_SIZE_BYTES)/2U) : ((uint32_t)buffer))
 #define OV7670_RESET_BUFFER_ADDR()    (uint32_t)img_buffer
 #endif
 
@@ -96,8 +96,11 @@
 
 #else
 /* For whole-size snapshot buffer */
-#define OV7670_BUFFER_SIZE             (OV7670_FRAME_SIZE_BYTES)
+#define OV7670_BUFFER_SIZE_BYTES       (OV7670_FRAME_SIZE_BYTES)
 #define OV7670_DMA_DATA_LEN            (OV7670_FRAME_SIZE_WORDS)
+
+#define OV7670_START_XLK(htim, channel)
+#define OV7670_STOP_XLK(htim, channel)
 #endif
 
 /******************************************************************************
@@ -400,7 +403,7 @@ static struct
 
 /* Image buffer */
 #ifndef	DISPLAY_BUFFER_ADDR
-static uint8_t img_buffer[OV7670_BUFFER_SIZE] __attribute__((section(".DMA_Buffer_section")));
+uint8_t img_buffer[OV7670_BUFFER_SIZE_BYTES] __attribute__((section(".CAM_Buffer_section")));
 #endif
 
 uint32_t line_counter;
@@ -611,6 +614,7 @@ void HAL_DCMI_VsyncEventCallback(DCMI_HandleTypeDef *hdcmi)
 
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 {
+    frame_counter++;
 }
 
 #else
@@ -697,7 +701,7 @@ void HAL_DCMI_LineEventCallback(DCMI_HandleTypeDef *hdcmi)
 #else
             	if (lineCnt&1)
             	{
-                    buf_addr = (uint32_t)img_buffer + ((OV7670_BUFFER_SIZE)/2U);
+                    buf_addr = (uint32_t)img_buffer + ((OV7670_BUFFER_SIZE_BYTES)/2U);
             	}
             	else
             	{

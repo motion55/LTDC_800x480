@@ -247,6 +247,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 HAL_StatusTypeDef ov7670_write(uint8_t regAddr, uint8_t data);
+extern uint8_t img_buffer[];
 
 void DebugMain(uint32_t val)
 {
@@ -318,10 +319,24 @@ void DebugMain(uint32_t val)
 #else
 		//uint8_t ret = DCMI_SingleRandomWrite(OV7670_COM7, SCCB_REG_RESET);
 		DebugPrint("\r\n Clearing camera buffer");
-		uint16_t *buffer = (uint16_t *)0x38000200;
-		for (int i = 0; i<640; i++)	{
-			buffer[i] = 0xFFFF;
+		uint16_t *buffer = (uint16_t *)img_buffer;
+	#if 1
+		for (int i = 0; i<(OV7670_WIDTH*OV7670_HEIGHT); i++)
+		{
+			*buffer = 0;
+			buffer++;
 		}
+	#else
+		for (int i = 0; i<480; i++)
+		{
+			uint16_t *line_buffer = buffer;
+			buffer += 1600;
+			for (int j = 0; j<640; j++) {
+				line_buffer[i] = 0xFF;
+				line_buffer++;
+			}
+		}
+	#endif
 #endif
 	}
 		break;
@@ -332,9 +347,17 @@ void DebugMain(uint32_t val)
 		HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_SET);
 #else
-		//uint8_t ret = DCMI_OV7670_Init();
-		//DebugPrint("\r\n DCMI_OV7670_Init() = %02X", ret);
+		DebugPrint("\r\n Paint_DrawImage(gImage_800X221, 0, 0, 800, 221);");
+		Paint_DrawImage(gImage_800X221, 0, 0, 800, 221);
 #endif
+	}
+		break;
+	case 5:
+	{
+		DebugPrint("\r\n Paint_DrawImage(img_buffer, 0, 0, OV7670_WIDTH, OV7670_HEIGHT);");
+		Paint_DrawImage(img_buffer, (DISPLAY_WIDTH-OV7670_WIDTH)/2,
+				(DISPLAY_HEIGHT-OV7670_HEIGHT)/2,
+				OV7670_WIDTH, OV7670_HEIGHT);
 	}
 		break;
 	}

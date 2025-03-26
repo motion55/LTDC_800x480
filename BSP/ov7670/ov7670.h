@@ -26,7 +26,7 @@
 
 #define OV7670_STREAM_MODE_BY_FRAME              0
 #define OV7670_STREAM_MODE_BY_LINE               1
-#define OV7670_STREAM_MODE                       OV7670_STREAM_MODE_BY_LINE
+#define OV7670_STREAM_MODE                       OV7670_STREAM_MODE_BY_FRAME
 
 /* Delay API */
 #define OV7670_DELAY(ms)                         HAL_Delay(ms)
