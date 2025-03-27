@@ -37,7 +37,6 @@
 #include "GUI_Paint.h"
 #include "image.h"
 #include "debug_console.h"
-#include "camera/dcmi_OV7670.h"
 #include "ov7670/ov7670.h"
 
 /* USER CODE END Includes */

@@ -11,7 +11,7 @@
 
 #include "main.h"
 #include "OV7670.h"
-#include "StateM.h"
+//#include "StateM.h"
 #include "dcmi.h"
 #include "i2c.h"
 
