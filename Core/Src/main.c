@@ -59,6 +59,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+static char IsFrameReady = 0;
+extern uint8_t img_buffer[];
+
+void FrameTask()
+{
+	if (IsFrameReady)
+	{
+		BSP_LCD_FillRGBRect((DISPLAY_WIDTH-OV7670_WIDTH)/2, (DISPLAY_HEIGHT-OV7670_HEIGHT)/2,
+				img_buffer, OV7670_WIDTH, OV7670_HEIGHT);
+		IsFrameReady = 0;
+	}
+}
 
 /* USER CODE END PV */
 
@@ -148,6 +160,8 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	DebugInit();
+	OV7670_Init(&hdcmi, &hi2c_dcmi, 0, 0);
+	OV7670_Start();
 
 	while (1)
 	{
@@ -155,9 +169,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 #if 1
+		FrameTask();
 		DebugTask();
 		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
 		HAL_Delay(100);
+		FrameTask();
 		DebugTask();
 		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 		HAL_Delay(100);
@@ -245,8 +261,15 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 HAL_StatusTypeDef ov7670_write(uint8_t regAddr, uint8_t data);
-extern uint8_t img_buffer[];
+
+void VSync_CB(const uint8_t *buffer, uint32_t buf_size)
+{
+	UNUSED(buffer); UNUSED(buf_size);
+	IsFrameReady = 1;
+}
+
 
 void DebugMain(uint32_t val)
 {
@@ -270,9 +293,9 @@ void DebugMain(uint32_t val)
 	{
 #if 1
 		uint8_t temp1, temp2;
-		if (ov7670_read(OV7670_PID, &temp1)==HAL_OK)
+		if (ov7670_read(OV7670_REG_PID, &temp1)==HAL_OK)
 		{
-			ov7670_read(OV7670_VER, &temp2);
+			ov7670_read(OV7670_REG_VER, &temp2);
 			DebugPrint("\r\n ReadID %02X %02X", temp1, temp2);
 		}
 		else
@@ -345,21 +368,40 @@ void DebugMain(uint32_t val)
 		DebugPrint("\r\n HAL_GPIO_WritePin(CAMERA_GPIO_Port, CAMERA_Pin, GPIO_PIN_SET);");
 		HAL_GPIO_WritePin(CAMERA_SCL_GPIO_Port, CAMERA_SCL_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(CAMERA_SDA_GPIO_Port, CAMERA_SDA_Pin, GPIO_PIN_SET);
+//#else
+//		DebugPrint("\r\n BSP_LCD_FillRGBRect();");
+//		BSP_LCD_FillRGBRect((DISPLAY_WIDTH-OV7670_WIDTH)/2, (DISPLAY_HEIGHT-OV7670_HEIGHT)/2,
+//				img_buffer, OV7670_WIDTH, OV7670_HEIGHT);
 #else
-		DebugPrint("\r\n Paint_DrawImage(gImage_800X221, 0, 0, 800, 221);");
-		Paint_DrawImage(gImage_800X221, 0, 0, 800, 221);
+		DebugPrint("\r\n BSP_LCD_FillRGBRect();");
+		BSP_LCD_FillRGBRect((DISPLAY_WIDTH-OV7670_WIDTH)/2, (DISPLAY_HEIGHT-OV7670_HEIGHT)/2,
+				img_buffer, OV7670_WIDTH, OV7670_HEIGHT);
 #endif
 	}
 		break;
 	case 5:
 	{
+#if 1
 		DebugPrint("\r\n Paint_DrawImage(img_buffer, 0, 0, OV7670_WIDTH, OV7670_HEIGHT);");
 		Paint_DrawImage(img_buffer, (DISPLAY_WIDTH-OV7670_WIDTH)/2,
 				(DISPLAY_HEIGHT-OV7670_HEIGHT)/2,
 				OV7670_WIDTH, OV7670_HEIGHT);
+#endif
+	}
+		break;
+	case 6:
+	{
+		BSP_LCD_Clear(MAGENTA);
+	}
+		break;
+	case 7:
+	{
+		OV7670_RegisterCallback(OV7670_DRAWFRAME_CBK, (OV7670_FncPtr_t)VSync_CB);
 	}
 		break;
 	}
+
+
 }
 
 

@@ -134,6 +134,8 @@ uint32_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos);
 void     BSP_LCD_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint32_t pixel);
 void     BSP_LCD_Clear(uint32_t Color);
 
+void     BSP_LCD_FillRGBRect(uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height);
+
 
 #ifdef __cplusplus
 }

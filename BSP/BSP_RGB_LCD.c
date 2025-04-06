@@ -42,6 +42,9 @@
 #define HFP  2
 #define VFP  2
 
+#define	USE_DMA2D_TO_FILL_RGB_RECT	1
+#define	USE_BSP_CPU_CACHE_MAINTENANCE	0
+
 /** @addtogroup STM32746G_DISCOVERY
   * @{
   */
@@ -280,6 +283,107 @@ void BSP_LCD_Clear(uint32_t Color)
   LL_FillBuffer(ActiveLayer, (uint32_t *)(hLtdcHandler.LayerCfg[ActiveLayer].FBStartAdress), BSP_LCD_GetXSize(), BSP_LCD_GetYSize(), 0, Color);
 }
 
+static uint32_t PixelFormatFactor = 2U;
+
+/**
+  * @brief  Converts a line to an RGB pixel format.
+  * @param  Instance LCD Instance
+  * @param  pSrc Pointer to source buffer
+  * @param  pDst Output color
+  * @param  xSize Buffer width
+  * @param  ColorMode Input color mode
+  */
+static void LL_ConvertLineToRGB(uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode)
+{
+  uint32_t output_color_mode;
+
+  switch (hLtdcHandler.LayerCfg[ActiveLayer].PixelFormat)
+  {
+    case LTDC_PIXEL_FORMAT_RGB565:
+      output_color_mode = DMA2D_OUTPUT_RGB565; /* RGB565 */
+      break;
+    case LTDC_PIXEL_FORMAT_RGB888:
+    default:
+      output_color_mode = DMA2D_OUTPUT_ARGB8888; /* ARGB8888 */
+      break;
+  }
+
+  /* Configure the DMA2D Mode, Color Mode and output offset */
+  hDma2dHandler.Init.Mode         = DMA2D_M2M_PFC;
+  hDma2dHandler.Init.ColorMode    = output_color_mode;
+  hDma2dHandler.Init.OutputOffset = 0;
+
+  /* Foreground Configuration */
+  hDma2dHandler.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hDma2dHandler.LayerCfg[1].InputAlpha = 0xFF;
+  hDma2dHandler.LayerCfg[1].InputColorMode = ColorMode;
+  hDma2dHandler.LayerCfg[1].InputOffset = 0;
+
+  hDma2dHandler.Instance = DMA2D;
+
+  /* DMA2D Initialization */
+  if (HAL_DMA2D_Init(&hDma2dHandler) == HAL_OK)
+  {
+    if (HAL_DMA2D_ConfigLayer(&hDma2dHandler, 1) == HAL_OK)
+    {
+      if (HAL_DMA2D_Start(&hDma2dHandler, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
+      {
+        /* Polling For DMA transfer */
+        (void)HAL_DMA2D_PollForTransfer(&hDma2dHandler, 25);
+      }
+    }
+  }
+}
+
+
+/**
+  * @brief  Draw a horizontal line on LCD.
+  * @param  Xpos X position.
+  * @param  Ypos Y position.
+  * @param  pData Pointer to RGB line data
+  * @param  Width Rectangle width.
+  * @param  Height Rectangle Height.
+  * @retval BSP status.
+  */
+void BSP_LCD_FillRGBRect(uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height)
+{
+  uint32_t i;
+
+#if (USE_DMA2D_TO_FILL_RGB_RECT == 1)
+  uint32_t  Xaddress;
+  for(i = 0; i < Height; i++)
+  {
+    /* Get the line address */
+    Xaddress = hLtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (PixelFormatFactor*((BSP_LCD_GetXSize()*(Ypos + i)) + Xpos));
+
+#if (USE_BSP_CPU_CACHE_MAINTENANCE == 1)
+    SCB_CleanDCache_by_Addr((uint32_t *)pData, PixelFormatFactor*BSP_LCD_GetXSize());
+#endif /* USE_BSP_CPU_CACHE_MAINTENANCE */
+
+    /* Write line */
+    if(hLtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565)
+    {
+      LL_ConvertLineToRGB((uint32_t *)pData, (uint32_t *)Xaddress, Width, DMA2D_INPUT_RGB565);
+    }
+    else
+    {
+      LL_ConvertLineToRGB((uint32_t *)pData, (uint32_t *)Xaddress, Width, DMA2D_INPUT_ARGB8888);
+    }
+    pData += PixelFormatFactor*Width;
+  }
+#else
+  uint32_t color, j;
+  for(i = 0; i < Height; i++)
+  {
+    for(j = 0; j < Width; j++)
+    {
+      color = *pData | (*(pData + 1) << 8) | (*(pData + 2) << 16) | (*(pData + 3) << 24);
+      BSP_LCD_WritePixel(Instance, Xpos + j, Ypos + i, color);
+      pData += PixelFormatFactor;
+    }
+  }
+#endif
+}
 
 /**
   * @brief  Draws a pixel on LCD.
